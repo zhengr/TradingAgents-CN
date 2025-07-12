@@ -214,9 +214,38 @@ def create_market_analyst(llm, toolkit):
                     toolkit.get_china_stock_data,
                 ]
             else:
-                # 美股和港股使用Yahoo Finance
+                # 美股和港股使用优化的数据获取（FinnHub优先，yfinance备用）
+                from langchain_core.tools import BaseTool
+
+                class OptimizedUSStockDataTool(BaseTool):
+                    name: str = "get_us_stock_data_optimized"
+                    description: str = f"获取美股/港股{ticker}的市场数据（FinnHub优先，yfinance备用）。直接调用，无需参数。"
+
+                    def _run(self, query: str = "") -> str:
+                        try:
+                            print(f"📈 [DEBUG] 使用优化美股数据获取，股票代码: {ticker}")
+                            # 使用优化的缓存数据获取（FinnHub优先）
+                            from tradingagents.dataflows.optimized_us_data import get_us_stock_data_cached
+                            return get_us_stock_data_cached(
+                                symbol=ticker,
+                                start_date='2025-05-28',
+                                end_date=current_date,
+                                force_refresh=False
+                            )
+                        except Exception as e:
+                            print(f"❌ 优化美股数据获取失败: {e}")
+                            # 备用方案：使用原始API
+                            try:
+                                return toolkit.get_YFin_data_online.invoke({
+                                    'symbol': ticker,
+                                    'start_date': '2025-05-28',
+                                    'end_date': current_date
+                                })
+                            except Exception as e2:
+                                return f"获取股票数据失败: {str(e2)}"
+
                 tools = [
-                    toolkit.get_YFin_data_online,
+                    OptimizedUSStockDataTool(),
                     toolkit.get_stockstats_indicators_report_online,
                 ]
         else:
