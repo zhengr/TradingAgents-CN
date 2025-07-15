@@ -30,7 +30,7 @@ from utils.progress_tracker import StreamlitProgressDisplay, create_progress_cal
 
 # 设置页面配置
 st.set_page_config(
-    page_title="TradingAgents-CN 股票分析平台",
+    page_title="TradingAgents 股票分析平台",
     page_icon="📈",
     layout="wide",
     initial_sidebar_state="expanded",
